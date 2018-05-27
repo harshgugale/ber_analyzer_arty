@@ -24,12 +24,12 @@ class tx(Module):
 
 def tb(dut,data_width):
 	yield dut.tx_prbs_config.eq(0b10)
-	#for i in range(50):
-	yield
-	print("{0:0{1}b} ".format((yield dut.txdata),data_width))
+	for i in range(3):
+		yield
+		print("{0:0{1}b} ".format((yield dut.txdata),data_width))
 
 if __name__ == "__main__":
-	data_width = 40
+	data_width = 20
 	dut = tx(data_width)
 	run_simulation(dut,tb(dut,data_width),vcd_name = "tx_mod")
 
