@@ -122,7 +122,6 @@ class PRBSRX(Module):
     def __init__(self, width, reverse=False):
         self.i = Signal(width)
         self.config = Signal(2)
-        self.prbs_errors = Signal(width)
         self.errors = Signal(32)
 
         # # #
@@ -146,7 +145,6 @@ class PRBSRX(Module):
             prbs7.i.eq(prbs_data),
             prbs15.i.eq(prbs_data),
             prbs31.i.eq(prbs_data),
-            self.prbs_errors.eq(prbs7.errors)
         ]
 
         # errors count
