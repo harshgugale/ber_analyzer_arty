@@ -1,6 +1,6 @@
 from migen import *
 
-from transceiver_test.transceiver.prbs import *
+from prbs import *
 
 class _RX(Module):
 	def __init__(self, data_width):

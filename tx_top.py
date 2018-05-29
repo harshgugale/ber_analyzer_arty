@@ -1,6 +1,6 @@
 from migen import *
 
-from transceiver_test.transceiver.prbs import *
+from prbs import *
 
 
 class _TX(Module):
