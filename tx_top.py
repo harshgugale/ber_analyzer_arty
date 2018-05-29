@@ -1,32 +1,35 @@
 from migen import *
+
 from transceiver_test.transceiver.prbs import *
 
 
 class _TX(Module):
-	def __init__ (self,data_width = 20):
+	def __init__ (self,data_width=20):
 		#self.tx_produce_square_wave = tx_produce_square_wave = Signal(reset = 0)
 		self.tx_prbs_config = tx_prbs_config = Signal(2)
 
 		self.txdata = txdata = Signal(data_width)
 
 		prbs_tx = PRBSTX(data_width)
+		self.submodules += prbs_tx
 
-		self.submodules+=prbs_tx
-
-		self.comb+=[prbs_tx.config.eq(tx_prbs_config),txdata.eq(prbs_tx.o)]
+		self.comb += [
+			prbs_tx.config.eq(tx_prbs_config),
+			txdata.eq(prbs_tx.o)
+		]
 
 class TX(Module):
-	def __init__ (self,data_width = 20):
+	def __init__ (self,data_width=20):
 		self.tx_prbs_config = CSRStorage(2)
 		self.txdata = CSRStorage(data_width)
 
 		_tx = _TX(data_width)
-
 		self.submodules += _tx
 
 		self.comb += [
 			_tx.tx_prbs_config.eq(self.tx_prbs_config.storage),
-			_tx.txdata.eq(self.txdata.storage)]
+			_tx.txdata.eq(self.txdata.storage)
+		]
 
 
 def tb(dut,data_width):
@@ -39,10 +42,3 @@ if __name__ == "__main__":
 	data_width = 20
 	dut = _TX(data_width)
 	run_simulation(dut,tb(dut,data_width),vcd_name = "tx_mod")
-
-
-
-
-
-
-
