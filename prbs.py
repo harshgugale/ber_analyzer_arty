@@ -88,19 +88,22 @@ class PRBSChecker(Module):
     def __init__(self, n_in, taps=[17, 22]):
         self.i = Signal(n_in)
         self.errors = Signal(n_in)
-
+        self.curr = Signal(n_in)
         # # #
 
         n_state = max(taps) + 1
         state = Signal(n_state, reset=1)
         curval = [state[i] for i in range(n_state)]
+        curval += [0]*(n_in - n_state)
         for i in reversed(range(n_in)):
             correctv = reduce(xor, [curval[tap] for tap in taps])
-            self.sync += self.errors[i].eq(self.i[i] != correctv)
-            curval.insert(0, self.i[i])
+            #self.sync += self.errors[i].eq(self.i[i] != correctv)
+            curval.insert(0, correctv)
             curval.pop()
 
         self.sync += state.eq(Cat(*curval[:n_state]))
+        self.sync += self.curr.eq(Cat(*curval))
+        self.sync += [self.errors.eq(self.i ^ self.curr)]
 
 
 class PRBS7Checker(PRBSChecker):
@@ -122,7 +125,7 @@ class PRBSRX(Module):
     def __init__(self, width, reverse=False):
         self.i = Signal(width)
         self.config = Signal(2)
-        self.errors = Signal(32)
+        self.bit_wise_errors = Signal(width)
 
         # # #
 
@@ -150,13 +153,16 @@ class PRBSRX(Module):
         # errors count
         self.sync += \
             If(config == 0,
-                self.errors.eq(0)
-            ).Elif(self.errors != (2**32-1),
-                If(config == 0b01,
-                    self.errors.eq(self.errors + (prbs7.errors != 0))
-                ).Elif(config == 0b10,
-                    self.errors.eq(self.errors + (prbs15.errors != 0))
-                ).Elif(config == 0b11,
-                    self.errors.eq(self.errors + (prbs31.errors != 0))
-                )
+                #self.errors.eq(0)
+                self.bit_wise_errors.eq(0)
+            ).Elif(config == 0b01,
+                    #self.errors.eq(self.errors + (prbs7.errors != 0)),
+            self.bit_wise_errors.eq(prbs7.errors)
+            ).Elif(config == 0b10,
+                    #self.errors.eq(self.errors + (prbs15.errors != 0)),
+            self.bit_wise_errors.eq(prbs15.errors)
+            ).Elif(config == 0b11,
+                    #self.errors.eq(self.errors + (prbs31.errors != 0)),
+            self.bit_wise_errors.eq(prbs31.errors)
             )
+
