@@ -151,7 +151,7 @@ class PRBSRX(Module):
         ]
 
         # errors count
-        self.sync += \
+        self.comb += \
             If(config == 0,
                 #self.errors.eq(0)
                 self.bit_wise_errors.eq(0)

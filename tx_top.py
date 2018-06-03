@@ -18,19 +18,6 @@ class _TX(Module):
 			txdata.eq(prbs_tx.o)
 		]
 
-class TX(Module):
-	def __init__ (self,data_width=20):
-		self.tx_prbs_config = CSRStorage(2)
-		self.txdata = CSRStorage(data_width)
-
-		_tx = _TX(data_width)
-		self.submodules += _tx
-
-		self.comb += [
-			_tx.tx_prbs_config.eq(self.tx_prbs_config.storage),
-			_tx.txdata.eq(self.txdata.storage)
-		]
-
 
 def tb(dut,data_width):
 	yield dut.tx_prbs_config.eq(0b10)
