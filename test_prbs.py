@@ -22,13 +22,17 @@ def tb(dut):
     yield dut.rx.config.eq(0b01)
     for i in range(64):
         yield
-        print("cycle:{}, errors: {}".format(i, (yield dut.rx.errors)))
+        print("cycle:{}, errors: {}".format(i, (yield dut.rx.bit_wise_errors)))
     # change tx and verify that we now have errors on rx
+    yield dut.tx.config.eq(0b11)
+    yield dut.rx.config.eq(0b00)
+    for i in range(16):
+        yield
     yield dut.tx.config.eq(0b11)
     yield dut.rx.config.eq(0b01)
     for i in range(64):
         yield
-        print("cycle:{}, errors: {}".format(i, (yield dut.rx.errors)))
+        print("cycle:{}, errors: {}".format(i, (yield dut.rx.bit_wise_errors)))
 
 if __name__ == "__main__":
     dut = DUT(32)
