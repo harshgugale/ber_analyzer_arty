@@ -69,8 +69,8 @@ class PRBSControl:
 		c2 = int(self.wb.regs.top_total_bit_count.read())
 
 		ber = ((err2-err1)/(20*(c2-c1)))
-		print("c1 {} c2 {} e1 {} e2 {}".format(c1,c2,err1,err2))
-		print("Bit error ratio : {}".format(ber))
+		#print("c1 {} c2 {} e1 {} e2 {}".format(c1,c2,err1,err2))
+		#print("Bit error ratio : {}".format(ber))
 		return ber
 
 	def closeCon(self):
