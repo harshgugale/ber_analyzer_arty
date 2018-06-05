@@ -47,7 +47,10 @@ class PRBSControl:
 			mask = mask <<1
 			mask = mask + 1
 
-		self.wb.regs.top_mask.write(mask)
+		if error_fraction is 0:
+			self.wb.regs.top_mask.write(0)
+		else:
+			self.wb.regs.top_mask.write(mask)
 		time.sleep(0.001)
 
 	def calcBER(self,timems):
