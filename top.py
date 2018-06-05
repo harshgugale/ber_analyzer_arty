@@ -11,7 +11,7 @@ class _Top(Module):
 		self.bit_wise_errors = Signal(data_width)
 		self.bit_error = Signal(8)
 		self.mask = Signal(data_width)
-		self.enable_err_count = Signal()
+		self.enable_err_count = Signal(2)
 		self.total_bit_count = Signal(32)
 
 		mask50 = 1
@@ -43,10 +43,13 @@ class _Top(Module):
 
 		self.sync += self.bit_error.eq(valadd)
 		self.sync += [
-			If(self.enable_err_count == 1,
+			If(self.enable_err_count == 0b01,
 			self.global_error.eq(self.global_error + self.bit_error),
-			self.total_bit_count.eq(self.total_bit_count + 1))
-			.Else(
+			self.total_bit_count.eq(self.total_bit_count + 1)
+			).Elif(self.enable_err_count == 0b11,
+			self.global_error.eq(self.global_error),
+			self.total_bit_count.eq(self.total_bit_count)
+			).Elif(self.enable_err_count == 0b00,
 			self.global_error.eq(0),
 			self.total_bit_count.eq(0)
 			)]
@@ -58,7 +61,7 @@ class Top(Module, AutoCSR):
 		self.mask = CSRStorage(20)
 		self.global_error = CSRStatus(32)
 		self.total_bit_count = CSRStatus(32)
-		self.enable_err_count = CSRStorage()
+		self.enable_err_count = CSRStorage(2)
 
 		_top = _Top()
 		self.submodules += _top
@@ -78,17 +81,43 @@ def tb(dut):
 	yield dut.rx_config.eq(0b00)
 	for i in range(16):
 		yield
-    # start rx and verify we dont have errors:
+    
 	yield dut.mask.eq(0x0)
+	yield dut.enable_err_count.eq(0b00)
 	yield dut.tx_config.eq(0b01)
 	yield dut.rx_config.eq(0b01)
+
+	for i in range(8):
+		yield
+	
+	yield dut.enable_err_count.eq(0b01)
+
 	for i in range(64):
 		yield
-    # change tx and verify that we now have errors on rx
+
+	yield dut.enable_err_count.eq(0b11)
+
+	for i in range(8):
+		yield
+
+	yield dut.enable_err_count.eq(0b00)
+
 	yield dut.mask.eq(0x55555)
 	yield dut.tx_config.eq(0b01)
 	yield dut.rx_config.eq(0b01)
+
+	for i in range(8):
+		yield
+	
+	yield dut.enable_err_count.eq(0b01)
+
 	for i in range(64):
+		yield
+    # change tx and verify that we now have errors on rx
+
+	yield dut.enable_err_count.eq(0b11)
+
+	for i in range(8):
 		yield
 
 if __name__ == "__main__":
