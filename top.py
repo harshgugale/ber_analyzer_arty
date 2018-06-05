@@ -14,12 +14,6 @@ class _Top(Module):
 		self.enable_err_count = Signal(2)
 		self.total_bit_count = Signal(32)
 
-		mask50 = 1
-		for i in range(data_width):
-			if(mask50 < 2**data_width):
-				mask50 = mask50 << 2
-				mask50 = mask50 + 1
-
 		tx = _TX(data_width)
 		rx = _RX(data_width)
 		self.submodules += tx, rx
@@ -28,12 +22,7 @@ class _Top(Module):
 			tx.tx_prbs_config.eq(self.tx_config),
 			rx.rx_prbs_config.eq(self.rx_config),
 			rx.rxdata.eq((tx.txdata ^ self.mask)),
-			self.bit_wise_errors.eq(rx.bit_wise_errors),
-			#If(
-			#self.mask_config == 00, self.mask.eq(0)
-			#).Else(
-			#self.mask.eq(mask50)
-			#)
+			self.bit_wise_errors.eq(rx.bit_wise_errors)
 		]
 
 		valadd = Signal(32)
@@ -103,8 +92,8 @@ def tb(dut):
 	yield dut.enable_err_count.eq(0b00)
 
 	yield dut.mask.eq(0x55555)
-	yield dut.tx_config.eq(0b01)
-	yield dut.rx_config.eq(0b01)
+	yield dut.tx_config.eq(0b00)
+	yield dut.rx_config.eq(0b00)
 
 	for i in range(8):
 		yield
