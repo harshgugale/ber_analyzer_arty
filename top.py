@@ -102,7 +102,6 @@ def tb(dut):
 
 	for i in range(64):
 		yield
-    # change tx and verify that we now have errors on rx
 
 	yield dut.enable_err_count.eq(0b11)
 
