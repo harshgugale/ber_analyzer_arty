@@ -7,11 +7,12 @@ class _TX(Module):
 	def __init__ (self,data_width=20):
 		#self.tx_produce_square_wave = tx_produce_square_wave = Signal(reset = 0)
 		self.tx_prbs_config = tx_prbs_config = Signal(2)
-
 		self.txdata = txdata = Signal(data_width)
 
 		prbs_tx = PRBSTX(data_width)
 		self.submodules += prbs_tx
+
+		#Data Muxing may be implemented here 
 
 		self.comb += [
 			prbs_tx.config.eq(tx_prbs_config),
