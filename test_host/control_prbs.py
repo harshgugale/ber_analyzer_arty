@@ -1,12 +1,16 @@
-from litex.soc.tools.remote import RemoteClient
 import time
 
 class PRBSControl:
-	def __init__ (self):
-		self.wb = RemoteClient()
+	def __init__ (self,regs,name):
+		self.regs = regs
+		self.name = name
+		self.build()
 
-	def openCon(self):
-		self.wb.open()
+	def build(self):
+		for key, value in self.regs.d.items():
+			if self.name == key[:len(self.name)]:
+				key = key.replace(self.name + "_", "")
+				setattr(self, key, value)
 
 	def setPRBSConfig(self,txConfig,rxConfig):
 		Txval = 0
@@ -34,11 +38,11 @@ class PRBSControl:
 			Rxval = None
 
 		if Txval is not None: 
-			self.wb.regs.top_tx_config.write(Txval)
+			self.tx_config.write(Txval)
 			time.sleep(0.001)
 		
 		if Rxval is not None:
-			self.wb.regs.top_rx_config.write(Rxval)
+			self.rx_config.write(Rxval)
 			time.sleep(0.001)
 
 	def setErrMask(self,error_fraction, data_width):
@@ -48,36 +52,29 @@ class PRBSControl:
 			mask = mask + 1
 
 		if error_fraction is 0:
-			self.wb.regs.top_mask.write(0)
+			self.mask.write(0)
 		else:
-			self.wb.regs.top_mask.write(mask)
+			self.mask.write(mask)
 		time.sleep(0.001)
 
-	def calcBER(self,timems):
-		self.wb.regs.top_enable_err_count.write(0b00)
+	def calcBER(self,timems, data_width):
+		self.enable_err_count.write(0b00)
 		time.sleep(0.001)
+		self.enable_err_count.write(0b11)
 
-		self.wb.regs.top_enable_err_count.write(0b11)
+		c1 = int(self.total_bit_count.read())
+		err1 = int(self.global_error.read())
 
-		c1 = int(self.wb.regs.top_total_bit_count.read())
-		err1 = int(self.wb.regs.top_global_error.read())
-
-		self.wb.regs.top_enable_err_count.write(0b01)
-
+		self.enable_err_count.write(0b01)
 		time.sleep(timems*0.001)
+		self.enable_err_count.write(0b11)
 
-		self.wb.regs.top_enable_err_count.write(0b11)
+		err2 = int(self.global_error.read())
+		c2 = int(self.total_bit_count.read())
 
-		err2 = int(self.wb.regs.top_global_error.read())
-		c2 = int(self.wb.regs.top_total_bit_count.read())
-
-		ber = ((err2-err1)/(20*(c2-c1)))
-		#print("c1 {} c2 {} e1 {} e2 {}".format(c1,c2,err1,err2))
-		#print("Bit error ratio : {}".format(ber))
+		ber = ((err2-err1)/(data_width*(c2-c1)))
 		return ber
 
-	def closeCon(self):
-		self.wb.close()
 
 
 
