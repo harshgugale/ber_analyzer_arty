@@ -88,6 +88,7 @@ class PRBSChecker(Module):
         self.i = Signal(n_in)
         self.errors = Signal(n_in)
         self.curr = Signal(n_in)
+        self.mask = Signal(n_in)
         # # #
 
         n_state = max(taps) + 1
@@ -99,8 +100,9 @@ class PRBSChecker(Module):
             curval.insert(0, correctv)
             curval.pop()
 
-        self.sync += state.eq(Cat(*curval[:n_state]))
-        self.sync += self.curr.eq(Cat(*curval))
+        #self.sync += state.eq(Cat(*curval[:n_state]))
+        self.sync += state.eq(self.i[:n_state] ^ self.mask)
+        self.comb += self.curr.eq(Cat(*curval))
         self.sync += [self.errors.eq(self.i ^ self.curr)]
 
 
@@ -126,6 +128,7 @@ class PRBSRX(Module):
     def __init__(self, width, reverse=False):
         self.i = Signal(width)
         self.config = Signal(2)
+        self.mask = Signal(width)
         self.bit_wise_errors = Signal(width)
 
         # # #
@@ -151,6 +154,10 @@ class PRBSRX(Module):
             prbs15.i.eq(prbs_data),
             prbs23.i.eq(prbs_data),
             prbs31.i.eq(prbs_data),
+            prbs7.mask.eq(self.mask),
+            prbs15.mask.eq(self.mask),
+            prbs23.mask.eq(self.mask),
+            prbs31.mask.eq(self.mask),
         ]
 
         # errors count
