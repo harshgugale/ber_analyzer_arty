@@ -79,26 +79,60 @@ class PRBSControl:
 		time.sleep(0.001)
 
 
-	def calcBER(self,timems, data_width = 40):
+	def BERinit(self):
+		self.c1 = 0
+		self.c2 = 0
+		self.err1 = 0
+		self.err2 = 0
+		self.enable_err_count.write(0b01)
+		time.sleep(0.001)
+
+	def calcBER(self, data_width = 40):
+
+		self.enable_err_count.write(0b11)
+		self.err2 = err2 = int(self.global_error.read())
+		self.c2 = c2 = int(self.total_bit_count.read())
+		print(c2,err2)
+
+		if(int(self.en8b10b.read()) == 1):
+			ber = ((self.err2-self.err1)/((data_width/10)*8*(self.c2-self.c1)))
+		else:
+			ber = ((self.err2-self.err1)/(data_width*(self.c2-self.c1)))
+
 		self.enable_err_count.write(0b00)
 		time.sleep(0.001)
 		self.enable_err_count.write(0b11)
 
-		c1 = int(self.total_bit_count.read())
-		err1 = int(self.global_error.read())
+		self.c1 = c1 = int(self.total_bit_count.read())
+		self.err1 = err1 = int(self.global_error.read())
 
 		self.enable_err_count.write(0b01)
-		time.sleep(timems*0.001)
-		self.enable_err_count.write(0b11)
-
-		err2 = int(self.global_error.read())
-		c2 = int(self.total_bit_count.read())
-
-		if(int(self.en8b10b.read()) == 1):
-			ber = ((err2-err1)/((data_width/10)*8*(c2-c1)))
-		else:
-			ber = ((err2-err1)/(data_width*(c2-c1)))
+		print(c1,c2,err1,err2)
 		return ber
+		
+
+#Use CalcBER below if using only abstraction class without GUI.
+
+	# def calcBER(self,timems, data_width = 40):
+	# 	self.enable_err_count.write(0b00)
+	# 	time.sleep(0.001)
+	# 	self.enable_err_count.write(0b11)
+
+	# 	c1 = int(self.total_bit_count.read())
+	# 	err1 = int(self.global_error.read())
+
+	# 	self.enable_err_count.write(0b01)
+	# 	time.sleep(timems*0.001)
+	# 	self.enable_err_count.write(0b11)
+
+	# 	err2 = int(self.global_error.read())
+	# 	c2 = int(self.total_bit_count.read())
+
+	# 	if(int(self.en8b10b.read()) == 1):
+	# 		ber = ((err2-err1)/((data_width/10)*8*(c2-c1)))
+	# 	else:
+	# 		ber = ((err2-err1)/(data_width*(c2-c1)))
+	# 	return ber
 
 
 
