@@ -92,7 +92,6 @@ class PRBSControl:
 		self.enable_err_count.write(0b11)
 		self.err2 = err2 = int(self.global_error.read())
 		self.c2 = c2 = int(self.total_bit_count.read())
-		print(c2,err2)
 
 		if(int(self.en8b10b.read()) == 1):
 			ber = ((self.err2-self.err1)/((data_width/10)*8*(self.c2-self.c1)))
@@ -107,7 +106,6 @@ class PRBSControl:
 		self.err1 = err1 = int(self.global_error.read())
 
 		self.enable_err_count.write(0b01)
-		print(c1,c2,err1,err2)
 		return ber
 		
 
