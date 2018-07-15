@@ -1,6 +1,5 @@
 from operator import xor, add
 from functools import reduce
-
 from migen import *
 from migen.genlib.cdc import MultiReg
 
@@ -47,6 +46,7 @@ class PRBS31Generator(PRBSGenerator):
 class PRBSTX(Module):
     def __init__(self, width, reverse=False):
         self.config = Signal(2)
+        self.mask = Signal(width)
         self.i = Signal(width)
         self.o = Signal(width)
 
@@ -66,13 +66,13 @@ class PRBSTX(Module):
         prbs_data = Signal(width)
         self.comb += \
             If(config == 0b00,
-                prbs_data.eq(prbs7.o)
+                prbs_data.eq(prbs7.o^self.mask)
             ).Elif(config == 0b01,
-                prbs_data.eq(prbs15.o)
+                prbs_data.eq(prbs15.o^self.mask)
             ).Elif(config == 0b10,
-                prbs_data.eq(prbs23.o)
+                prbs_data.eq(prbs23.o^self.mask)
             ).Else(
-                prbs_data.eq(prbs31.o))
+                prbs_data.eq(prbs31.o^self.mask))
 
         # optional bits reversing
         if reverse:
@@ -89,21 +89,23 @@ class PRBSChecker(Module):
         self.errors = Signal(n_in)
         self.curr = Signal(n_in)
         self.mask = Signal(n_in)
+
         # # #
 
         n_state = max(taps) + 1
         state = Signal(n_state, reset=1)
         curval = [state[i] for i in range(n_state)]
-        curval += [0]*(n_in - n_state)
-        for i in reversed(range(n_in)):
-            correctv = reduce(xor, [curval[tap] for tap in taps])
-            curval.insert(0, correctv)
-            curval.pop()
+        val = Signal()
+        self.correctv = [val for _ in range(n_in)]
 
-        #self.sync += state.eq(Cat(*curval[:n_state]))
-        self.sync += state.eq(self.i[:n_state] ^ self.mask)
-        self.comb += self.curr.eq(Cat(*curval))
-        self.sync += [self.errors.eq(self.i ^ self.curr)]
+        for i in reversed(range(n_in)): 
+            self.correctv.insert(0,reduce(xor, [curval[tap] for tap in taps]))
+            curval.insert(0, self.i[i] ^ self.mask[i])
+            curval.pop()
+            self.correctv.pop()
+
+        self.sync += state.eq(Cat(*curval[:n_state]))
+        self.comb += [self.curr.eq(Cat(*self.correctv)) , self.errors.eq( self.curr ^ self.i)]
 
 
 class PRBS7Checker(PRBSChecker):
